@@ -1,0 +1,232 @@
+import tkinter as tk
+from tkinter import ttk, messagebox
+
+# =====================
+# Student Node
+# =====================
+class Student:
+    def __init__(self, roll_no, name, dept, marks):
+        self.roll_no = roll_no
+        self.name = name
+        self.dept = dept
+        self.marks = marks
+        self.next = None
+        self.left = None
+        self.right = None
+        self.height = 1
+
+# =====================
+# Linked List for Records
+# =====================
+class StudentLinkedList:
+    def __init__(self):
+        self.head = None
+
+    def add_student(self, roll_no, name, dept, marks):
+        new_student = Student(roll_no, name, dept, marks)
+        if self.head is None:
+            self.head = new_student
+        else:
+            temp = self.head
+            while temp.next:
+                temp = temp.next
+            temp.next = new_student
+
+    def get_all_students(self):
+        students = []
+        temp = self.head
+        while temp:
+            students.append(temp)
+            temp = temp.next
+        return students
+
+# =====================
+# BST for Fast Search & Sorted Display
+# =====================
+class StudentBST:
+    def __init__(self):
+        self.root = None
+
+    def insert(self, root, student):
+        if root is None:
+            return student
+        elif student.roll_no < root.roll_no:
+            root.left = self.insert(root.left, student)
+        else:
+            root.right = self.insert(root.right, student)
+        return root
+
+    def inorder(self, root, result):
+        if root:
+            self.inorder(root.left, result)
+            result.append(root)
+            self.inorder(root.right, result)
+        return result
+
+    def search(self, root, roll_no):
+        if root is None or root.roll_no == roll_no:
+            return root
+        if roll_no < root.roll_no:
+            return self.search(root.left, roll_no)
+        return self.search(root.right, roll_no)
+
+# =====================
+# GUI Application
+# =====================
+class StudentApp:
+    def __init__(self, root):
+        self.root = root
+        self.root.title("Student Record Management System")
+        self.root.geometry("900x650")
+        self.root.configure(bg="#f0f2f5")
+
+        # Backend structures
+        self.linked_list = StudentLinkedList()
+        self.bst = StudentBST()
+
+        # Title
+        title = tk.Label(root, text="📚 Student Record Management System", font=("Helvetica", 20, "bold"),
+                         bg="#34495e", fg="white", pady=15)
+        title.pack(fill="x")
+
+        # Input Frame
+        input_frame = tk.Frame(root, bg="white", bd=2, relief="groove")
+        input_frame.pack(pady=20, padx=20, fill="x")
+
+        # Roll No
+        tk.Label(input_frame, text="Roll No:", font=("Helvetica", 12), bg="white").grid(row=0, column=0, pady=10, sticky="w")
+        self.roll_entry = tk.Entry(input_frame, font=("Helvetica", 12))
+        self.roll_entry.grid(row=0, column=1, pady=10, padx=10)
+
+        # Name
+        tk.Label(input_frame, text="Name:", font=("Helvetica", 12), bg="white").grid(row=0, column=2, pady=10, sticky="w")
+        self.name_entry = tk.Entry(input_frame, font=("Helvetica", 12))
+        self.name_entry.grid(row=0, column=3, pady=10, padx=10)
+
+        # Department
+        tk.Label(input_frame, text="Department:", font=("Helvetica", 12), bg="white").grid(row=1, column=0, pady=10, sticky="w")
+        self.dept_entry = tk.Entry(input_frame, font=("Helvetica", 12))
+        self.dept_entry.grid(row=1, column=1, pady=10, padx=10)
+
+        # Marks
+        tk.Label(input_frame, text="Marks:", font=("Helvetica", 12), bg="white").grid(row=1, column=2, pady=10, sticky="w")
+        self.marks_entry = tk.Entry(input_frame, font=("Helvetica", 12))
+        self.marks_entry.grid(row=1, column=3, pady=10, padx=10)
+
+        # Buttons Frame
+        btn_frame = tk.Frame(root, bg="#f0f2f5")
+        btn_frame.pack(pady=10)
+
+        btn_style = {"font": ("Helvetica", 12, "bold"), "width": 15, "bd": 0, "pady": 5}
+
+        tk.Button(btn_frame, text="Add Student", command=self.add_student, bg="#27ae60", fg="white", **btn_style).grid(row=0, column=0, padx=5)
+        tk.Button(btn_frame, text="Search Student", command=self.search_student, bg="#2980b9", fg="white", **btn_style).grid(row=0, column=1, padx=5)
+        tk.Button(btn_frame, text="Display All", command=self.display_all, bg="#8e44ad", fg="white", **btn_style).grid(row=0, column=2, padx=5)
+        tk.Button(btn_frame, text="Display Sorted", command=self.display_sorted, bg="#d35400", fg="white", **btn_style).grid(row=0, column=3, padx=5)
+
+        # Table Frame
+        table_frame = tk.Frame(root)
+        table_frame.pack(fill="both", expand=True, padx=20, pady=20)
+
+        style = ttk.Style()
+        style.theme_use("clam")
+        style.configure("Treeview", background="#ecf0f1", foreground="black", rowheight=30, fieldbackground="#ecf0f1")
+        style.map("Treeview", background=[("selected", "#3498db")])
+
+        self.tree = ttk.Treeview(table_frame, columns=("Roll No", "Name", "Department", "Marks"), show="headings")
+        self.tree.pack(fill="both", expand=True)
+
+        for col in ("Roll No", "Name", "Department", "Marks"):
+            self.tree.heading(col, text=col)
+            self.tree.column(col, anchor="center", width=180)
+
+        # Alternating row colors
+        self.tree.tag_configure("oddrow", background="white")
+        self.tree.tag_configure("evenrow", background="#d6eaf8")
+
+        # =====================
+        # Preloaded Students
+        # =====================
+        preloaded_students = [
+            (101, "Alice", "CSE", 88.5),
+            (102, "Bob", "ECE", 76.0),
+            (103, "Charlie", "ME", 91.0),
+            (104, "David", "CSE", 82.0),
+            (105, "Eva", "ECE", 95.5),
+            (106, "Frank", "ME", 67.0),
+            (107, "Grace", "CSE", 89.0),
+            (108, "Hannah", "ECE", 74.5),
+            (109, "Ian", "ME", 81.0),
+            (110, "Jane", "CSE", 92.5)
+        ]
+
+        for roll, name, dept, marks in preloaded_students:
+            self.linked_list.add_student(roll, name, dept, marks)
+            student = Student(roll, name, dept, marks)
+            self.bst.root = self.bst.insert(self.bst.root, student)
+
+        # Show preloaded data
+        self.display_all()
+
+    # =====================
+    # Functions
+    # =====================
+    def add_student(self):
+        try:
+            roll_no = int(self.roll_entry.get())
+            name = self.name_entry.get()
+            dept = self.dept_entry.get()
+            marks = float(self.marks_entry.get())
+
+            if not name or not dept:
+                messagebox.showerror("Error", "All fields must be filled!")
+                return
+
+            self.linked_list.add_student(roll_no, name, dept, marks)
+            new_student = Student(roll_no, name, dept, marks)
+            self.bst.root = self.bst.insert(self.bst.root, new_student)
+
+            messagebox.showinfo("Success", "Student added successfully!")
+            self.clear_entries()
+            self.display_all()
+        except ValueError:
+            messagebox.showerror("Error", "Invalid input!")
+
+    def search_student(self):
+        try:
+            roll_no = int(self.roll_entry.get())
+            student = self.bst.search(self.bst.root, roll_no)
+            if student:
+                messagebox.showinfo("Found", f"Roll No: {student.roll_no}\nName: {student.name}\nDept: {student.dept}\nMarks: {student.marks}")
+            else:
+                messagebox.showwarning("Not Found", "No student with that Roll No.")
+        except ValueError:
+            messagebox.showerror("Error", "Enter a valid Roll No!")
+
+    def display_all(self):
+        self.tree.delete(*self.tree.get_children())
+        students = self.linked_list.get_all_students()
+        for i, s in enumerate(students):
+            tag = "evenrow" if i % 2 == 0 else "oddrow"
+            self.tree.insert("", "end", values=(s.roll_no, s.name, s.dept, s.marks), tags=(tag,))
+
+    def display_sorted(self):
+        self.tree.delete(*self.tree.get_children())
+        result = self.bst.inorder(self.bst.root, [])
+        for i, s in enumerate(result):
+            tag = "evenrow" if i % 2 == 0 else "oddrow"
+            self.tree.insert("", "end", values=(s.roll_no, s.name, s.dept, s.marks), tags=(tag,))
+
+    def clear_entries(self):
+        self.roll_entry.delete(0, tk.END)
+        self.name_entry.delete(0, tk.END)
+        self.dept_entry.delete(0, tk.END)
+        self.marks_entry.delete(0, tk.END)
+
+# =====================
+# Run Application
+# =====================
+if __name__ == "__main__":
+    root = tk.Tk()
+    app = StudentApp(root)
+    root.mainloop()
